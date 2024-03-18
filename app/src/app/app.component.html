@@ -1,0 +1,11 @@
+<h2>Loaded {{ appName }}</h2>
+
+<div>
+  <h3>User info from host application</h3>
+  <pre>{{ hostUser() | json }}</pre>
+</div>
+
+<div>
+  <h3>User info from local application</h3>
+  <pre>{{ user() | json }}</pre>
+</div>

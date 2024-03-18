@@ -1,0 +1,45 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            provider: keycloak-provider
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_basic
+            scope:
+              - openid
+        provider:
+          keycloak-provider:
+            issuer-uri: ${OAUTH2_ISSUER_URL}
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URL}
+
+app:
+  auth:
+    access-token-cookie-name: access_token
+    refresh-token-cookie-name: refresh_token
+    id-token-cookie-name: id_token
+    token-expiration-ms: 86_400_000
+    logout-url-redirect: ${AUTH_LOGOUT_URL_REDIRECT}
+  oauth2:
+    client-name: keycloak
+    authorization-request-cookie-name: oauth2_auth_request
+    redirect-uri-cookie-name: redirect_uri
+    redirect-uri-param-name: redirectUri
+    state-cookie-name: oauth2_state
+    authorized-redirect-uris: ${OAUTH2_AUTHORIZED_REDIRECT_URIS}
+  cookie:
+    domain: ${COOKIE_SHARE_DOMAIN}
+
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE

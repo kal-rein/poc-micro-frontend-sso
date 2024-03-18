@@ -1,0 +1,93 @@
+version: '3'
+
+networks:
+  keycloak:
+
+services:
+  keycloak:
+    build: ./keycloak
+    container_name: keycloak
+    volumes:
+      - "./keycloak/import:/opt/keycloak/data/import:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`keycloak.poc-multi-frontend.test`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+    networks:
+      keycloak:
+        aliases:
+          - keycloak.poc-multi-frontend.test
+
+  back-1:
+    build: .
+    container_name: back-1
+    restart: on-failure
+    environment:
+      CLIENT_ID: back-1
+      CLIENT_SECRET: cUSBCjwN6zgqaTRzT6ohDzzBeRT23eGU
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://back-1.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-1.rule=Host(`back-1.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-1.entrypoints=web"
+    networks:
+      - keycloak
+    depends_on:
+      - keycloak
+
+  back-2:
+    build: .
+    container_name: back-2
+    restart: on-failure
+    environment:
+      CLIENT_ID: back-2
+      CLIENT_SECRET: pJQu4VNA9l4q4KfGelvZbz9x0XFTO3CX
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://back-2.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-2.rule=Host(`back-2.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-2.entrypoints=web"
+    networks:
+      - keycloak
+    depends_on:
+      - keycloak
+
+  back-3:
+    build: .
+    container_name: back-3
+    restart: on-failure
+    environment:
+      CLIENT_ID: back-3
+      CLIENT_SECRET: pkleKEtZfcZ1OqL4S1b9wEGkpvSffZ36
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://back-3.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-3.rule=Host(`back-3.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-3.entrypoints=web"
+    networks:
+      - keycloak
+    depends_on:
+      - keycloak
+
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    networks:
+      - keycloak
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"

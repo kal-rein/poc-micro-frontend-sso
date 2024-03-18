@@ -1,0 +1,5 @@
+{
+	"app-1": "http://front-1.poc-multi-frontend.test/remoteEntry.json",
+	"app-2": "http://front-2.poc-multi-frontend.test/remoteEntry.json",
+	"app-3": "http://front-3.poc-multi-frontend.test/remoteEntry.json"
+}

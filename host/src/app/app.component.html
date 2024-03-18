@@ -1,0 +1,14 @@
+<h1>Host app, <small>welcome {{ user()?.name }}</small></h1>
+
+<div style="display: flex; gap: 8px">
+  <button routerLink="app-1">Load app 1</button>
+
+  @if (isProduction) {
+    <button routerLink="app-2">Load app 2</button>
+    <button routerLink="app-3">Load app 3</button>
+  }
+
+  <button (click)="logout()">Logout</button>
+</div>
+
+<router-outlet />

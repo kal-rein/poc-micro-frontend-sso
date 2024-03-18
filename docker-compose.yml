@@ -1,0 +1,164 @@
+version: '3'
+
+networks:
+  proxy:
+
+services:
+  keycloak:
+    build:
+      context: ./back/keycloak
+      dockerfile: ./Dockerfile
+    container_name: keycloak
+    restart: unless-stopped
+    volumes:
+      - "./back/keycloak/import:/opt/keycloak/data/import:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keycloak.rule=Host(`keycloak.poc-multi-frontend.test`)"
+      - "traefik.http.routers.keycloak.entrypoints=web"
+    networks:
+      proxy:
+        aliases:
+          - keycloak.poc-multi-frontend.test
+
+  back-1:
+    build:
+      context: ./back
+      dockerfile: ./Dockerfile
+    container_name: back-1
+    restart: unless-stopped
+    environment:
+      CLIENT_ID: back-1
+      CLIENT_SECRET: cUSBCjwN6zgqaTRzT6ohDzzBeRT23eGU
+      AUTH_LOGOUT_URL_REDIRECT: http://poc-multi-frontend.test
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://poc-multi-frontend.test,http://front-1.poc-multi-frontend.test,http://front-2.poc-multi-frontend.test,http://front-3.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-1.rule=Host(`back-1.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-1.entrypoints=web"
+    networks:
+      - proxy
+    depends_on:
+      - keycloak
+
+  back-2:
+    build:
+      context: ./back
+      dockerfile: ./Dockerfile
+    container_name: back-2
+    restart: unless-stopped
+    environment:
+      CLIENT_ID: back-2
+      CLIENT_SECRET: pJQu4VNA9l4q4KfGelvZbz9x0XFTO3CX
+      AUTH_LOGOUT_URL_REDIRECT: http://poc-multi-frontend.test
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://poc-multi-frontend.test,http://front-1.poc-multi-frontend.test,http://front-2.poc-multi-frontend.test,http://front-3.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-2.rule=Host(`back-2.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-2.entrypoints=web"
+    networks:
+      - proxy
+    depends_on:
+      - keycloak
+
+  back-3:
+    build:
+      context: ./back
+      dockerfile: ./Dockerfile
+    container_name: back-3
+    restart: unless-stopped
+    environment:
+      CLIENT_ID: back-3
+      CLIENT_SECRET: pkleKEtZfcZ1OqL4S1b9wEGkpvSffZ36
+      AUTH_LOGOUT_URL_REDIRECT: http://poc-multi-frontend.test
+      OAUTH2_ISSUER_URL: http://keycloak.poc-multi-frontend.test/realms/POC
+      OAUTH2_AUTHORIZED_REDIRECT_URIS: http://poc-multi-frontend.test,http://front-1.poc-multi-frontend.test,http://front-2.poc-multi-frontend.test,http://front-3.poc-multi-frontend.test
+      COOKIE_SHARE_DOMAIN: poc-multi-frontend.test
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.back-3.rule=Host(`back-3.poc-multi-frontend.test`)"
+      - "traefik.http.routers.back-3.entrypoints=web"
+    networks:
+      - proxy
+    depends_on:
+      - keycloak
+
+  host:
+    build:
+      context: ./host
+      dockerfile: ./Dockerfile
+    container_name: host
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.host.rule=Host(`poc-multi-frontend.test`)"
+      - "traefik.http.routers.host.entrypoints=web"
+    networks:
+      - proxy
+
+  app-1:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile
+      args:
+        backNumber: 1
+    container_name: app-1
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-1.rule=Host(`front-1.poc-multi-frontend.test`)"
+      - "traefik.http.routers.app-1.entrypoints=web"
+    networks:
+      - proxy
+
+  app-2:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile
+      args:
+        backNumber: 2
+    container_name: app-2
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-2.rule=Host(`front-2.poc-multi-frontend.test`)"
+      - "traefik.http.routers.app-2.entrypoints=web"
+    networks:
+      - proxy
+
+  app-3:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile
+      args:
+        backNumber: 3
+    container_name: app-3
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-3.rule=Host(`front-3.poc-multi-frontend.test`)"
+      - "traefik.http.routers.app-3.entrypoints=web"
+    networks:
+      - proxy
+
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    networks:
+      - proxy
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
